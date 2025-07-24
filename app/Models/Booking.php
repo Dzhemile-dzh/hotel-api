@@ -9,14 +9,13 @@ class Booking extends Model
 {
     use HasFactory;
 
-public function room()
-{
-    return $this->belongsTo(Room::class);
-}
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
+    }
 
-public function guests()
-{
-    return $this->belongsToMany(Guest::class);
-}
-
+    public function guests()
+    {
+        return $this->belongsToMany(Guest::class);
+    }
 }
