@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('room_types', function (Blueprint $table) {
-            $table->id();
-            $table->string('external_id')->unique(); // PMS ID
-            $table->string('name');
-            $table->timestamps();
+        Schema::create('booking_guest', function (Blueprint $table) {
+            $table->foreignId('booking_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('guest_id')->constrained()->cascadeOnDelete();
+            $table->primary(['booking_id', 'guest_id']);
         });
     }
 
@@ -24,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('room_types');
+        Schema::dropIfExists('booking_guest');
     }
 };

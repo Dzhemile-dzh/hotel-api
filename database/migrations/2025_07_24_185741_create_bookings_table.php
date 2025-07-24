@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
+            $table->string('external_id')->unique();
+            $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
         });
     }
