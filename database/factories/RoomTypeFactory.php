@@ -10,9 +10,21 @@ class RoomTypeFactory extends Factory
 
     public function definition()
     {
+        $roomTypes = [
+            'Standard Single' => 'Cozy room with single bed, perfect for solo travelers',
+            'Standard Double' => 'Comfortable room with double bed for couples',
+            'Deluxe Single' => 'Premium single room with luxury amenities',
+            'Deluxe Double' => 'Spacious double room with premium features',
+            'Suite' => 'Luxury suite with separate living area',
+            'Executive Suite' => 'Top-tier suite with business amenities'
+        ];
+        
+        $name = $this->faker->randomElement(array_keys($roomTypes));
+        
         return [
-            'external_id' => $this->faker->uuid(),
-            'name' => $this->faker->randomElement(['Standard', 'Deluxe', 'Suite']),
+            'external_id' => 'EXT-TYPE-' . $this->faker->unique()->numberBetween(300, 399),
+            'name' => $name,
+            'description' => $roomTypes[$name],
         ];
     }
 }

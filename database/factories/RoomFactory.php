@@ -12,8 +12,9 @@ class RoomFactory extends Factory
     public function definition()
     {
         return [
-            'external_id' => $this->faker->uuid(),
-            'number' => $this->faker->numberBetween(100, 999),
+            'external_id' => 'EXT-ROOM-' . $this->faker->unique()->numberBetween(200, 999),
+            'number' => (string) $this->faker->numberBetween(100, 999),
+            'floor' => $this->faker->numberBetween(1, 20),
             'room_type_id' => RoomType::factory(),
         ];
     }

@@ -11,10 +11,11 @@ class GuestFactory extends Factory
     public function definition()
     {
         return [
-            'external_id' => $this->faker->uuid(),
-            'name' => $this->faker->name,
-            'email' => $this->faker->unique()->safeEmail,
-            'phone' => $this->faker->phoneNumber,
+            'external_id' => 'EXT-GUEST-' . $this->faker->unique()->numberBetween(400, 999),
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'phone' => $this->faker->phoneNumber(),
         ];
     }
 }
