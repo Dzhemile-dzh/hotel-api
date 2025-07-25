@@ -264,12 +264,6 @@ php artisan sync:bookings --since="2024-01-01"
 - **Database Transactions**: Ensures data consistency during sync operations
 - **Rate Limiting**: Built-in rate limiting to respect API constraints
 
-### Performance Features
-
-- **Pagination**: All list endpoints support pagination
-- **Eager Loading**: Relationships loaded efficiently to prevent N+1 queries
-- **Indexing**: Database indexes on frequently queried fields
-- **Connection Pooling**: HTTP client configured for optimal performance
 
 ### Testing Strategy
 
@@ -284,6 +278,40 @@ php artisan sync:bookings --since="2024-01-01"
 - **Input Validation**: Comprehensive validation on all inputs
 - **SQL Injection Prevention**: Eloquent ORM with parameterized queries
 - **Rate Limiting**: Prevents abuse of internal API endpoints
+
+### Directory Structure
+```
+app/
+├── Console/Commands/          # Artisan commands
+├── Http/
+│   ├── Controllers/Api/      # API controllers with Swagger annotations
+│   ├── Requests/             # Form request validation
+│   └── Resources/            # API resource transformers
+├── Models/                   # Eloquent models with relationships
+├── Repositories/             # Data access layer (Repository Pattern)
+├── Services/                 # Business logic layer
+└── Providers/               # Service providers for DI registration
+```
+
+### Key Design Principles
+1. **Dependency Injection**: All dependencies are injected via constructors
+2. **Repository Pattern**: Data access logic is abstracted in repository classes
+3. **Service Layer**: Business logic is separated into service classes
+4. **Single Responsibility**: Each class has a single, well-defined purpose
+5. **Interface Segregation**: Services and repositories follow interface contracts
+6. **Database Transactions**: Critical operations are wrapped in transactions
+7. **Error Handling**: Comprehensive exception handling with proper logging
+8. **Caching**: Intelligent caching for API responses and database queries
+9. **Rate Limiting**: Respect for external API rate limits
+10. **Testing**: Comprehensive test coverage with proper mocking
+
+### Performance Optimizations
+- **Eager Loading**: Relationships are loaded efficiently with `with()`
+- **Caching**: API responses are cached to reduce external calls
+- **Parallel Processing**: Guest data is fetched in parallel
+- **Database Indexing**: Proper indexes on frequently queried columns
+- **Pagination**: Large datasets are paginated to prevent memory issues
+
 
 ## API Response Examples
 
