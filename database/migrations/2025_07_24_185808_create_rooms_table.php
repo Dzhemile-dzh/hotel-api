@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('rooms', function (Blueprint $table) {
             $table->id();
-            $table->string('external_id')->unique();
-            $table->string('number')->nullable();
-            $table->foreignId('room_type_id')->constrained()->cascadeOnDelete();
+            $table->string('external_id')->unique(); // PMS ID
+            $table->string('number');
+            $table->integer('floor');
+            $table->foreignId('room_type_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
         });
     }

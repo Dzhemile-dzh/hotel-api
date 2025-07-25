@@ -13,8 +13,13 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
-            $table->string('external_id')->unique();
+            $table->string('external_id')->unique(); // PMS ID
+            $table->date('arrival_date');
+            $table->date('departure_date');
             $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('room_type_id')->nullable()->constrained()->nullOnDelete();
+            $table->enum('status', ['confirmed', 'pending', 'cancelled', 'completed'])->default('pending');
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }
