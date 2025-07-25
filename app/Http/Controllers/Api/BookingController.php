@@ -7,13 +7,58 @@ use App\Models\Booking;
 use App\Models\Guest;
 use Illuminate\Http\Request;
 
+/**
+ * @OA\OpenApi(
+ *     @OA\Info(
+ *         version="1.0.0",
+ *         title="Hotel API",
+ *         description="API documentation for the Hotel Management System"
+ *     )
+ * )
+ */
 class BookingController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/bookings",
+     *     tags={"Bookings"},
+     *     summary="Get all bookings",
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of bookings"
+     *     )
+     * )
+     */
     public function index()
     {
         return Booking::with(['room', 'roomType', 'guests'])->get();
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/bookings",
+     *     tags={"Bookings"},
+     *     summary="Create a new booking",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"external_id","room_id","room_type_id","arrival_date","departure_date","status"},
+     *             @OA\Property(property="external_id", type="string"),
+     *             @OA\Property(property="room_id", type="integer"),
+     *             @OA\Property(property="room_type_id", type="integer"),
+     *             @OA\Property(property="arrival_date", type="string", format="date"),
+     *             @OA\Property(property="departure_date", type="string", format="date"),
+     *             @OA\Property(property="status", type="string"),
+     *             @OA\Property(property="notes", type="string"),
+     *             @OA\Property(property="guest_ids", type="array", @OA\Items(type="integer"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Booking created"
+     *     )
+     * )
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -43,11 +88,65 @@ class BookingController extends Controller
         return response()->json($booking->load(['room', 'roomType', 'guests']), 201);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/bookings/{id}",
+     *     tags={"Bookings"},
+     *     summary="Get a booking by ID",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Booking details"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Booking not found"
+     *     )
+     * )
+     */
     public function show(Booking $booking)
     {
         return $booking->load(['room', 'roomType', 'guests']);
     }
 
+    /**
+     * @OA\Put(
+     *     path="/api/bookings/{id}",
+     *     tags={"Bookings"},
+     *     summary="Update a booking",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="room_id", type="integer"),
+     *             @OA\Property(property="room_type_id", type="integer"),
+     *             @OA\Property(property="arrival_date", type="string", format="date"),
+     *             @OA\Property(property="departure_date", type="string", format="date"),
+     *             @OA\Property(property="status", type="string"),
+     *             @OA\Property(property="notes", type="string"),
+     *             @OA\Property(property="guest_ids", type="array", @OA\Items(type="integer"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Booking updated"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Booking not found"
+     *     )
+     * )
+     */
     public function update(Request $request, Booking $booking)
     {
         $data = $request->validate([
@@ -70,6 +169,27 @@ class BookingController extends Controller
         return $booking->load(['room', 'roomType', 'guests']);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/bookings/{id}",
+     *     tags={"Bookings"},
+     *     summary="Delete a booking",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="Booking deleted"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Booking not found"
+     *     )
+     * )
+     */
     public function destroy(Booking $booking)
     {
         $booking->delete();

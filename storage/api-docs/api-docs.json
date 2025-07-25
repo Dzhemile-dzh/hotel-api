@@ -1,0 +1,677 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Hotel API",
+        "description": "API documentation for the Hotel Management System",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/bookings": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Get all bookings",
+                "operationId": "4535e967ef15bc76dadf1efa40192f0d",
+                "responses": {
+                    "200": {
+                        "description": "List of bookings"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Create a new booking",
+                "operationId": "43e6dcca842886074084b8db86af7802",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "external_id",
+                                    "room_id",
+                                    "room_type_id",
+                                    "arrival_date",
+                                    "departure_date",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "external_id": {
+                                        "type": "string"
+                                    },
+                                    "room_id": {
+                                        "type": "integer"
+                                    },
+                                    "room_type_id": {
+                                        "type": "integer"
+                                    },
+                                    "arrival_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "departure_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    },
+                                    "guest_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Booking created"
+                    }
+                }
+            }
+        },
+        "/api/bookings/{id}": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Get a booking by ID",
+                "operationId": "c383a28985575aa1a16f783b2f762554",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Booking details"
+                    },
+                    "404": {
+                        "description": "Booking not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Update a booking",
+                "operationId": "de1ebc78c3adcb535d12d1c8dae98055",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "room_id": {
+                                        "type": "integer"
+                                    },
+                                    "room_type_id": {
+                                        "type": "integer"
+                                    },
+                                    "arrival_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "departure_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    },
+                                    "guest_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Booking updated"
+                    },
+                    "404": {
+                        "description": "Booking not found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Delete a booking",
+                "operationId": "a53474f63d3a2fe2275fc0b6c8cc16cb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Booking deleted"
+                    },
+                    "404": {
+                        "description": "Booking not found"
+                    }
+                }
+            }
+        },
+        "/api/guests": {
+            "get": {
+                "tags": [
+                    "Guests"
+                ],
+                "summary": "Get all guests",
+                "operationId": "56cc8fe33a100159d774722901ae37e8",
+                "responses": {
+                    "200": {
+                        "description": "List of guests"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Guests"
+                ],
+                "summary": "Create a new guest",
+                "operationId": "e792b91966348e6bb3439a3d24883e1f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "external_id",
+                                    "first_name",
+                                    "last_name"
+                                ],
+                                "properties": {
+                                    "external_id": {
+                                        "type": "string"
+                                    },
+                                    "first_name": {
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Guest created"
+                    }
+                }
+            }
+        },
+        "/api/guests/{id}": {
+            "get": {
+                "tags": [
+                    "Guests"
+                ],
+                "summary": "Get a guest by ID",
+                "operationId": "4267610a6a43088364913e1b6071b25d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Guest details"
+                    },
+                    "404": {
+                        "description": "Guest not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Guests"
+                ],
+                "summary": "Update a guest",
+                "operationId": "af858a767bd4c0c6e7fd978a27775871",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Guest updated"
+                    },
+                    "404": {
+                        "description": "Guest not found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Guests"
+                ],
+                "summary": "Delete a guest",
+                "operationId": "627107a5c10ad7a3877e6ca545859ca8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Guest deleted"
+                    },
+                    "404": {
+                        "description": "Guest not found"
+                    }
+                }
+            }
+        },
+        "/api/rooms": {
+            "get": {
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Get all rooms",
+                "operationId": "db2a0f9c242ba089e87d5ae1fa8e14c5",
+                "responses": {
+                    "200": {
+                        "description": "List of rooms"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Create a new room",
+                "operationId": "809158a6b73bac8545f93f5b9f8a8a8a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "external_id",
+                                    "room_type_id",
+                                    "number",
+                                    "floor"
+                                ],
+                                "properties": {
+                                    "external_id": {
+                                        "type": "string"
+                                    },
+                                    "room_type_id": {
+                                        "type": "integer"
+                                    },
+                                    "number": {
+                                        "type": "string"
+                                    },
+                                    "floor": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Room created"
+                    }
+                }
+            }
+        },
+        "/api/rooms/{id}": {
+            "get": {
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Get a room by ID",
+                "operationId": "b1475eb28ef61d930c8d73dce18cd23c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Room details"
+                    },
+                    "404": {
+                        "description": "Room not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Update a room",
+                "operationId": "0c313fa83b1cc3ffd17495d103f021e2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "room_type_id": {
+                                        "type": "integer"
+                                    },
+                                    "number": {
+                                        "type": "string"
+                                    },
+                                    "floor": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Room updated"
+                    },
+                    "404": {
+                        "description": "Room not found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Delete a room",
+                "operationId": "4698523ee5dafa1ac652ef8ede5e96d4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Room deleted"
+                    },
+                    "404": {
+                        "description": "Room not found"
+                    }
+                }
+            }
+        },
+        "/api/room-types": {
+            "get": {
+                "tags": [
+                    "RoomTypes"
+                ],
+                "summary": "Get all room types",
+                "operationId": "ca013b8668b9235311faca0f7063a058",
+                "responses": {
+                    "200": {
+                        "description": "List of room types"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "RoomTypes"
+                ],
+                "summary": "Create a new room type",
+                "operationId": "45965ec37cb311105c9806350f4b9e21",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "external_id",
+                                    "name"
+                                ],
+                                "properties": {
+                                    "external_id": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Room type created"
+                    }
+                }
+            }
+        },
+        "/api/room-types/{id}": {
+            "get": {
+                "tags": [
+                    "RoomTypes"
+                ],
+                "summary": "Get a room type by ID",
+                "operationId": "32dfe7550e8eb4648f15f4037cca60ed",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Room type details"
+                    },
+                    "404": {
+                        "description": "Room type not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "RoomTypes"
+                ],
+                "summary": "Update a room type",
+                "operationId": "cb1bc264a4c17bd1f46e409a03526d6d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Room type updated"
+                    },
+                    "404": {
+                        "description": "Room type not found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "RoomTypes"
+                ],
+                "summary": "Delete a room type",
+                "operationId": "53dbaa498cdf5e36a364a6cb19d725f2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Room type deleted"
+                    },
+                    "404": {
+                        "description": "Room type not found"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Bookings",
+            "description": "Bookings"
+        },
+        {
+            "name": "Guests",
+            "description": "Guests"
+        },
+        {
+            "name": "Rooms",
+            "description": "Rooms"
+        },
+        {
+            "name": "RoomTypes",
+            "description": "RoomTypes"
+        }
+    ]
+}

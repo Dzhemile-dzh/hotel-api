@@ -11,6 +11,13 @@ A Laravel-based hotel management system that syncs bookings with a Property Mana
 - **Error Handling**: Comprehensive error handling and logging
 - **Progress Feedback**: Real-time progress indication during sync operations
 - **Idempotent Operations**: Safe to run multiple times without data duplication
+- **Swagger (OpenAPI) Documentation**: Interactive API docs generated from controller annotations
+
+## API Documentation (Swagger / OpenAPI)
+
+This project uses [L5-Swagger](https://github.com/DarkaOnLine/L5-Swagger) to generate OpenAPI documentation from annotations in controller files.
+
+http://localhost:8000/api/documentation#/
 
 ## API Endpoints
 
