@@ -3,30 +3,37 @@
 namespace App\Repositories;
 
 use App\Models\Booking;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class BookingRepository
 {
-    /**
-     * Get paginated bookings with filters
-     */
-    public function getPaginatedBookings(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    private Booking $model;
+
+    public function __construct(Booking $model)
     {
-        $query = Booking::with(['room', 'roomType', 'guests']);
-
-        $this->applyFilters($query, $filters);
-
-        return $query->paginate($perPage);
+        $this->model = $model;
     }
 
     /**
-     * Get booking by ID with relationships
+     * Get all bookings with pagination
+     */
+    public function getAllPaginated(int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model
+            ->with(['room', 'roomType', 'guests'])
+            ->paginate($perPage);
+    }
+
+    /**
+     * Get booking by ID
      */
     public function findById(int $id): ?Booking
     {
-        return Booking::with(['room', 'roomType', 'guests'])->find($id);
+        return $this->model
+            ->with(['room', 'roomType', 'guests'])
+            ->find($id);
     }
 
     /**
@@ -34,7 +41,10 @@ class BookingRepository
      */
     public function findByExternalId(string $externalId): ?Booking
     {
-        return Booking::where('external_id', $externalId)->first();
+        return $this->model
+            ->with(['room', 'roomType', 'guests'])
+            ->where('external_id', $externalId)
+            ->first();
     }
 
     /**
@@ -42,13 +52,15 @@ class BookingRepository
      */
     public function create(array $data): Booking
     {
-        $booking = Booking::create($data);
-
-        if (isset($data['guest_ids'])) {
-            $booking->guests()->sync($data['guest_ids']);
-        }
-
-        return $booking->load(['room', 'roomType', 'guests']);
+        return DB::transaction(function () use ($data) {
+            $booking = $this->model->create($data);
+            
+            if (isset($data['guest_ids'])) {
+                $booking->guests()->attach($data['guest_ids']);
+            }
+            
+            return $booking->load(['room', 'roomType', 'guests']);
+        });
     }
 
     /**
@@ -56,13 +68,15 @@ class BookingRepository
      */
     public function update(Booking $booking, array $data): Booking
     {
-        $booking->update($data);
-
-        if (isset($data['guest_ids'])) {
-            $booking->guests()->sync($data['guest_ids']);
-        }
-
-        return $booking->load(['room', 'roomType', 'guests']);
+        return DB::transaction(function () use ($booking, $data) {
+            $booking->update($data);
+            
+            if (isset($data['guest_ids'])) {
+                $booking->guests()->sync($data['guest_ids']);
+            }
+            
+            return $booking->load(['room', 'roomType', 'guests']);
+        });
     }
 
     /**
@@ -70,7 +84,10 @@ class BookingRepository
      */
     public function delete(Booking $booking): bool
     {
-        return $booking->delete();
+        return DB::transaction(function () use ($booking) {
+            $booking->guests()->detach();
+            return $booking->delete();
+        });
     }
 
     /**
@@ -78,58 +95,66 @@ class BookingRepository
      */
     public function getByStatus(string $status): Collection
     {
-        return Booking::byStatus($status)->with(['room', 'roomType', 'guests'])->get();
+        return $this->model
+            ->with(['room', 'roomType', 'guests'])
+            ->where('status', $status)
+            ->get();
     }
 
     /**
-     * Get active bookings (confirmed or pending)
+     * Get bookings for a specific guest
      */
-    public function getActiveBookings(): Collection
+    public function getByGuest(int $guestId): Collection
     {
-        return Booking::whereIn('status', ['confirmed', 'pending'])
+        return $this->model
             ->with(['room', 'roomType', 'guests'])
+            ->whereHas('guests', function ($query) use ($guestId) {
+                $query->where('guests.id', $guestId);
+            })
+            ->get();
+    }
+
+    /**
+     * Get bookings for a specific room
+     */
+    public function getByRoom(int $roomId): Collection
+    {
+        return $this->model
+            ->with(['room', 'roomType', 'guests'])
+            ->where('room_id', $roomId)
+            ->get();
+    }
+
+    /**
+     * Get bookings for a specific room type
+     */
+    public function getByRoomType(int $roomTypeId): Collection
+    {
+        return $this->model
+            ->with(['room', 'roomType', 'guests'])
+            ->where('room_type_id', $roomTypeId)
+            ->get();
+    }
+
+    /**
+     * Get active bookings (arrival_date >= today)
+     */
+    public function getActive(): Collection
+    {
+        return $this->model
+            ->with(['room', 'roomType', 'guests'])
+            ->where('arrival_date', '>=', now()->toDateString())
             ->get();
     }
 
     /**
      * Get bookings in date range
      */
-    public function getBookingsInDateRange(string $startDate, string $endDate): Collection
+    public function getInDateRange(string $startDate, string $endDate): Collection
     {
-        return Booking::inDateRange($startDate, $endDate)
+        return $this->model
             ->with(['room', 'roomType', 'guests'])
+            ->whereBetween('arrival_date', [$startDate, $endDate])
             ->get();
-    }
-
-    /**
-     * Get single room bookings for a specific guest
-     */
-    public function getSingleRoomBookingsForGuest(int $guestId): Collection
-    {
-        return Booking::singleRoomForGuest($guestId)
-            ->with(['room', 'roomType', 'guests'])
-            ->get();
-    }
-
-    /**
-     * Apply filters to query
-     */
-    private function applyFilters(Builder $query, array $filters): void
-    {
-        if (isset($filters['id'])) {
-            $query->filterByIds($filters['id']);
-        }
-
-        if (isset($filters['single_guest_id'])) {
-            $query->singleRoomForGuest($filters['single_guest_id']);
-        }
-
-        if (isset($filters['status'])) {
-            $query->byStatus($filters['status']);
-        }
-
-        if (isset($filters['date_range'])) {
-            $query->inDateRange($filters['date_range']['start'], $filters['date_range']['end']);
-        }
     }
 } 
