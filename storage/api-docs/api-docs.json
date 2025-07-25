@@ -11,11 +11,40 @@
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Get all bookings",
+                "summary": "Get all bookings (paginated, filterable by id)",
                 "operationId": "4535e967ef15bc76dadf1efa40192f0d",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "Filter by booking id (single or array)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List of bookings"
+                        "description": "Paginated list of bookings"
                     }
                 }
             },
@@ -201,11 +230,40 @@
                 "tags": [
                     "Guests"
                 ],
-                "summary": "Get all guests",
+                "summary": "Get all guests (paginated, filterable by id)",
                 "operationId": "56cc8fe33a100159d774722901ae37e8",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "Filter by guest id (single or array)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List of guests"
+                        "description": "Paginated list of guests"
                     }
                 }
             },
@@ -360,11 +418,40 @@
                 "tags": [
                     "Rooms"
                 ],
-                "summary": "Get all rooms",
+                "summary": "Get all rooms (paginated, filterable by id)",
                 "operationId": "db2a0f9c242ba089e87d5ae1fa8e14c5",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "Filter by room id (single or array)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List of rooms"
+                        "description": "Paginated list of rooms"
                     }
                 }
             },
@@ -514,11 +601,40 @@
                 "tags": [
                     "RoomTypes"
                 ],
-                "summary": "Get all room types",
+                "summary": "Get all room types (paginated, filterable by id)",
                 "operationId": "ca013b8668b9235311faca0f7063a058",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "Filter by room type id (single or array)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List of room types"
+                        "description": "Paginated list of room types"
                     }
                 }
             },

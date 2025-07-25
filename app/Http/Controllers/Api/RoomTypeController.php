@@ -11,16 +11,45 @@ class RoomTypeController extends Controller
      * @OA\Get(
      *     path="/api/room-types",
      *     tags={"RoomTypes"},
-     *     summary="Get all room types",
+     *     summary="Get all room types (paginated, filterable by id)",
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=15)
+     *     ),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         required=false,
+     *         description="Filter by room type id (single or array)",
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="List of room types"
+     *         description="Paginated list of room types"
      *     )
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        return RoomType::all();
+        $query = RoomType::query();
+        if ($request->has('id')) {
+            $ids = $request->input('id');
+            if (is_array($ids)) {
+                $query->whereIn('id', $ids);
+            } else {
+                $query->where('id', $ids);
+            }
+        }
+        $perPage = $request->input('per_page', 15);
+        return $query->paginate($perPage);
     }
 
     /**

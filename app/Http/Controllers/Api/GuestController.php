@@ -11,16 +11,45 @@ class GuestController extends Controller
      * @OA\Get(
      *     path="/api/guests",
      *     tags={"Guests"},
-     *     summary="Get all guests",
+     *     summary="Get all guests (paginated, filterable by id)",
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=15)
+     *     ),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         required=false,
+     *         description="Filter by guest id (single or array)",
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="List of guests"
+     *         description="Paginated list of guests"
      *     )
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Guest::all();
+        $query = Guest::query();
+        if ($request->has('id')) {
+            $ids = $request->input('id');
+            if (is_array($ids)) {
+                $query->whereIn('id', $ids);
+            } else {
+                $query->where('id', $ids);
+            }
+        }
+        $perPage = $request->input('per_page', 15);
+        return $query->paginate($perPage);
     }
 
     /**
