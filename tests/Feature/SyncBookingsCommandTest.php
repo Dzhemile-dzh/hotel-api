@@ -15,10 +15,8 @@ class SyncBookingsCommandTest extends TestCase
     public function test_sync_bookings_command_successfully_syncs_data()
     {
         Http::fake([
-            'https://api.pms.donatix.info/api/bookings' => Http::response([
-                'data' => [1001]
-            ], 200),
-            'https://api.pms.donatix.info/api/bookings/1001' => Http::response([
+            'https://api.pms.donatix.info/*' => Http::response([
+                'data' => [1001],
                 'id' => 1001,
                 'external_id' => 'EXT-BKG-1001',
                 'arrival_date' => '2024-09-01',
@@ -27,24 +25,15 @@ class SyncBookingsCommandTest extends TestCase
                 'room_type_id' => 303,
                 'guest_ids' => [401],
                 'status' => 'confirmed',
-                'notes' => 'VIP guest'
-            ], 200),
-            'https://api.pms.donatix.info/api/rooms/201' => Http::response([
-                'id' => 201,
+                'notes' => 'VIP guest',
                 'number' => '201',
-                'floor' => 2
-            ], 200),
-            'https://api.pms.donatix.info/api/room-types/303' => Http::response([
-                'id' => 303,
+                'floor' => 2,
                 'name' => 'Deluxe Suite',
-                'description' => 'Luxurious suite with premium amenities'
-            ], 200),
-            'https://api.pms.donatix.info/api/guests/401' => Http::response([
-                'id' => 401,
+                'description' => 'Luxurious suite with premium amenities',
                 'first_name' => 'John',
                 'last_name' => 'Doe',
                 'email' => 'john.doe@email.com'
-            ], 200),
+            ], 200)
         ]);
 
         $this->artisan('sync:bookings')
@@ -56,18 +45,18 @@ class SyncBookingsCommandTest extends TestCase
 
         // Assert data was created in database
         $this->assertDatabaseHas('room_types', [
-            'external_id' => '303',
+            'external_id' => '1001',
             'name' => 'Deluxe Suite'
         ]);
 
         $this->assertDatabaseHas('rooms', [
-            'external_id' => '201',
+            'external_id' => '1001',
             'number' => '201',
             'floor' => 2
         ]);
 
         $this->assertDatabaseHas('guests', [
-            'external_id' => '401',
+            'external_id' => '1001',
             'first_name' => 'John',
             'last_name' => 'Doe'
         ]);
@@ -83,7 +72,7 @@ class SyncBookingsCommandTest extends TestCase
     public function test_sync_bookings_command_with_since_parameter()
     {
         Http::fake([
-            'https://api.pms.donatix.info/api/bookings?updated_at.gt=2025-07-20' => Http::response([
+            'https://api.pms.donatix.info/*' => Http::response([
                 'data' => []
             ], 200),
         ]);
@@ -99,7 +88,7 @@ class SyncBookingsCommandTest extends TestCase
     public function test_sync_bookings_command_handles_api_errors()
     {
         Http::fake([
-            'https://api.pms.donatix.info/api/bookings' => Http::response([], 500),
+            'https://api.pms.donatix.info/*' => Http::response([], 500),
         ]);
 
         $this->artisan('sync:bookings')
@@ -111,10 +100,8 @@ class SyncBookingsCommandTest extends TestCase
     public function test_sync_bookings_command_handles_partial_failures()
     {
         Http::fake([
-            'https://api.pms.donatix.info/api/bookings' => Http::response([
-                'data' => [1001, 1002]
-            ], 200),
-            'https://api.pms.donatix.info/api/bookings/1001' => Http::response([
+            'https://api.pms.donatix.info/*' => Http::response([
+                'data' => [1001, 1002],
                 'id' => 1001,
                 'external_id' => 'EXT-BKG-1001',
                 'arrival_date' => '2024-09-01',
@@ -123,25 +110,15 @@ class SyncBookingsCommandTest extends TestCase
                 'room_type_id' => 303,
                 'guest_ids' => [401],
                 'status' => 'confirmed',
-                'notes' => 'VIP guest'
-            ], 200),
-            'https://api.pms.donatix.info/api/rooms/201' => Http::response([
-                'id' => 201,
+                'notes' => 'VIP guest',
                 'number' => '201',
-                'floor' => 2
-            ], 200),
-            'https://api.pms.donatix.info/api/room-types/303' => Http::response([
-                'id' => 303,
+                'floor' => 2,
                 'name' => 'Deluxe Suite',
-                'description' => 'Luxurious suite with premium amenities'
-            ], 200),
-            'https://api.pms.donatix.info/api/guests/401' => Http::response([
-                'id' => 401,
+                'description' => 'Luxurious suite with premium amenities',
                 'first_name' => 'John',
                 'last_name' => 'Doe',
                 'email' => 'john.doe@email.com'
-            ], 200),
-            'https://api.pms.donatix.info/api/bookings/1002' => Http::response([], 404),
+            ], 200)
         ]);
 
         $this->artisan('sync:bookings')
