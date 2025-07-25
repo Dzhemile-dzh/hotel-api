@@ -81,7 +81,7 @@ This project uses [Swagger](https://github.com/DarkaOnLine/L5-Swagger) to genera
    PMS_API_TIMEOUT=30
    PMS_API_RETRIES=3
    ```
-6. Run migrations (internal API):
+6. (Optional - internal API) Run migrations:
    ```bash
    php artisan migrate
    ```
@@ -189,14 +189,6 @@ Check scheduled tasks:
 
 ```bash
 php artisan schedule:list
-```
-
-### 5. Monitoring
-
-Cron jobs log their activity to Laravel's log files:
-
-```bash
-tail -f storage/logs/laravel.log
 ```
 
 ## Manual Synchronization
