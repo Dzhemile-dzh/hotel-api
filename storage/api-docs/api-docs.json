@@ -11,7 +11,7 @@
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Get all bookings (paginated, filterable by id)",
+                "summary": "Get all bookings (paginated, filterable by id, room type, and guest)",
                 "operationId": "4535e967ef15bc76dadf1efa40192f0d",
                 "parameters": [
                     {
@@ -39,6 +39,15 @@
                         "required": false,
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "name": "single_guest_id",
+                        "in": "query",
+                        "description": "Show only bookings for 'Single' rooms made by this guest id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
                         }
                     }
                 ],

@@ -19,6 +19,12 @@ This project uses [L5-Swagger](https://github.com/DarkaOnLine/L5-Swagger) to gen
 
 http://localhost:8000/api/documentation#/
 
+### Bookings Endpoint Filters
+
+- `?single_guest_id=GUEST_ID` — Show only bookings for 'Single' rooms made by the specified guest.
+- `?id=ID` or `?id[]=ID1&id[]=ID2` — Filter by booking id(s).
+- `?page=1&per_page=10` — Pagination.
+
 ## API Endpoints
 
 The system integrates with the following PMS API endpoints:

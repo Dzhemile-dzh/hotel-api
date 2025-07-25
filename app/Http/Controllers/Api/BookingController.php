@@ -22,7 +22,7 @@ class BookingController extends Controller
      * @OA\Get(
      *     path="/api/bookings",
      *     tags={"Bookings"},
-     *     summary="Get all bookings (paginated, filterable by id)",
+     *     summary="Get all bookings (paginated, filterable by id, room type, and guest)",
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -42,6 +42,13 @@ class BookingController extends Controller
      *         description="Filter by booking id (single or array)",
      *         @OA\Schema(type="string")
      *     ),
+     *     @OA\Parameter(
+     *         name="single_guest_id",
+     *         in="query",
+     *         required=false,
+     *         description="Show only bookings for 'Single' rooms made by this guest id",
+     *         @OA\Schema(type="integer")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Paginated list of bookings"
@@ -58,6 +65,15 @@ class BookingController extends Controller
             } else {
                 $query->where('id', $ids);
             }
+        }
+        // Filter for 'Single' room bookings made by a specific guest
+        if ($request->has('single_guest_id')) {
+            $guestId = $request->input('single_guest_id');
+            $query->whereHas('roomType', function ($q) {
+                $q->where('name', 'like', '%Single%');
+            })->whereHas('guests', function ($q) use ($guestId) {
+                $q->where('guests.id', $guestId);
+            });
         }
         $perPage = $request->input('per_page', 15);
         return $query->paginate($perPage);
