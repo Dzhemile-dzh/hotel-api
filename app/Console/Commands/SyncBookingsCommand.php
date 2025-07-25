@@ -23,16 +23,26 @@ class SyncBookingsCommand extends Command
      */
     protected $description = 'Sync bookings from PMS API with rate limiting and progress feedback';
 
+    private PmsApiService $apiService;
+    private BookingSyncService $syncService;
+
+    public function __construct(PmsApiService $apiService, BookingSyncService $syncService)
+    {
+        parent::__construct();
+        $this->apiService = $apiService;
+        $this->syncService = $syncService;
+    }
+
     /**
      * Execute the console command.
      */
-    public function handle(PmsApiService $apiService, BookingSyncService $syncService)
+    public function handle(): int
     {
         $this->info('Starting PMS booking synchronization...');
 
         try {
             $since = $this->option('since');
-            $this->syncBookings($apiService, $syncService, $since);
+            $this->syncBookings($since);
             $this->info('Synchronization completed successfully!');
             return 0;
         } catch (\Exception $e) {
@@ -48,11 +58,11 @@ class SyncBookingsCommand extends Command
     /**
      * Sync all bookings from the PMS API
      */
-    private function syncBookings(PmsApiService $apiService, BookingSyncService $syncService, ?string $since = null): void
+    private function syncBookings(?string $since = null): void
     {
         $this->info('Fetching booking IDs from PMS API...');
         
-        $bookingIds = $apiService->getBookingIds($since);
+        $bookingIds = $this->apiService->getBookingIds($since);
         $totalBookings = count($bookingIds);
 
         if ($totalBookings === 0) {
@@ -65,29 +75,37 @@ class SyncBookingsCommand extends Command
         $progressBar = $this->output->createProgressBar($totalBookings);
         $progressBar->start();
 
-        $processed = 0;
-        $errors = 0;
+        $successCount = 0;
+        $errorCount = 0;
 
         foreach ($bookingIds as $bookingId) {
             try {
-                $syncService->syncBooking($bookingId, $apiService);
-                $processed++;
+                $this->syncService->syncBooking($bookingId);
+                $successCount++;
             } catch (\Exception $e) {
-                $errors++;
+                $errorCount++;
                 Log::error("Failed to sync booking {$bookingId}", [
                     'error' => $e->getMessage(),
                     'booking_id' => $bookingId
                 ]);
-                $this->newLine();
-                $this->warn("Failed to sync booking {$bookingId}: " . $e->getMessage());
             }
 
             $progressBar->advance();
+            $this->rateLimit();
         }
 
         $progressBar->finish();
         $this->newLine(2);
 
-        $this->info("Sync completed: {$processed} processed, {$errors} errors");
+        $this->info("Sync completed: {$successCount} successful, {$errorCount} failed");
+    }
+
+    /**
+     * Apply rate limiting
+     */
+    private function rateLimit(): void
+    {
+        $delay = 1 / config('pms.api.rate_limit', 2);
+        usleep($delay * 1000000);
     }
 } 

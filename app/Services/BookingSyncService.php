@@ -10,18 +10,25 @@ use Illuminate\Support\Facades\DB;
 
 class BookingSyncService
 {
+    private PmsApiService $apiService;
+
+    public function __construct(PmsApiService $apiService)
+    {
+        $this->apiService = $apiService;
+    }
+
     /**
      * Sync a single booking with all its related data
      */
-    public function syncBooking(int $bookingId, PmsApiService $apiService): void
+    public function syncBooking(int $bookingId): void
     {
         // Fetch booking details
-        $bookingData = $apiService->getBookingDetails($bookingId);
+        $bookingData = $this->apiService->getBookingDetails($bookingId);
         
         // Fetch related data
-        $roomData = $apiService->getRoomDetails($bookingData['room_id']);
-        $roomTypeData = $apiService->getRoomTypeDetails($bookingData['room_type_id']);
-        $guestsData = $apiService->getGuestsDetails($bookingData['guest_ids']);
+        $roomData = $this->apiService->getRoomDetails($bookingData['room_id']);
+        $roomTypeData = $this->apiService->getRoomTypeDetails($bookingData['room_type_id']);
+        $guestsData = $this->apiService->getGuestsDetails($bookingData['guest_ids']);
 
         DB::transaction(function () use ($bookingData, $roomData, $roomTypeData, $guestsData) {
             // Sync room type first (room depends on it)

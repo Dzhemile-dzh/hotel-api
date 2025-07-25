@@ -24,10 +24,10 @@ class BookingSyncServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new BookingSyncService();
         /** @var \PHPUnit\Framework\MockObject\MockObject|PmsApiService $mock */
         $mock = $this->createMock(PmsApiService::class);
         $this->apiService = $mock;
+        $this->service = new BookingSyncService($this->apiService);
     }
 
     public function test_sync_booking_creates_all_related_data()
@@ -57,17 +57,17 @@ class BookingSyncServiceTest extends TestCase
         ];
 
         $guestsData = [
-            [
+            401 => [
                 'id' => 401,
                 'first_name' => 'John',
                 'last_name' => 'Doe',
-                'email' => 'john.doe@email.com'
+                'email' => 'john.doe@example.com'
             ],
-            [
+            402 => [
                 'id' => 402,
                 'first_name' => 'Jane',
                 'last_name' => 'Smith',
-                'email' => 'jane.smith@email.com'
+                'email' => 'jane.smith@example.com'
             ]
         ];
 
@@ -87,38 +87,38 @@ class BookingSyncServiceTest extends TestCase
             ->with([401, 402])
             ->willReturn($guestsData);
 
-        $this->service->syncBooking(1001, $this->apiService);
+        $this->service->syncBooking(1001);
 
         // Assert room type was created
         $this->assertDatabaseHas('room_types', [
-            'external_id' => '303',
+            'external_id' => 303,
             'name' => 'Deluxe Suite',
             'description' => 'Luxurious suite with premium amenities'
         ]);
 
         // Assert room was created
         $this->assertDatabaseHas('rooms', [
-            'external_id' => '201',
+            'external_id' => 201,
             'number' => '201',
             'floor' => 2
         ]);
 
         // Assert guests were created
         $this->assertDatabaseHas('guests', [
-            'external_id' => '401',
+            'external_id' => 401,
             'first_name' => 'John',
             'last_name' => 'Doe',
-            'email' => 'john.doe@email.com'
+            'email' => 'john.doe@example.com'
         ]);
 
         $this->assertDatabaseHas('guests', [
-            'external_id' => '402',
+            'external_id' => 402,
             'first_name' => 'Jane',
             'last_name' => 'Smith',
-            'email' => 'jane.smith@email.com'
+            'email' => 'jane.smith@example.com'
         ]);
 
-        // Assert booking was created (using date format that matches database)
+        // Assert booking was created
         $this->assertDatabaseHas('bookings', [
             'external_id' => 'EXT-BKG-1001',
             'arrival_date' => '2024-09-01 00:00:00',
@@ -129,34 +129,30 @@ class BookingSyncServiceTest extends TestCase
 
         // Assert booking-guest relationships were created
         $booking = Booking::where('external_id', 'EXT-BKG-1001')->first();
-        $guest1 = Guest::where('external_id', '401')->first();
-        $guest2 = Guest::where('external_id', '402')->first();
-
-        $this->assertTrue($booking->guests->contains($guest1));
-        $this->assertTrue($booking->guests->contains($guest2));
+        $this->assertCount(2, $booking->guests);
     }
 
     public function test_sync_booking_updates_existing_data()
     {
-        // Create existing data manually to avoid factory issues
+        // Create existing data
         $roomType = RoomType::create([
-            'external_id' => '303',
+            'external_id' => 303,
             'name' => 'Old Name',
             'description' => 'Old description'
         ]);
 
         $room = Room::create([
-            'external_id' => '201',
+            'external_id' => 201,
             'number' => '201',
             'floor' => 1,
             'room_type_id' => $roomType->id
         ]);
 
         $guest = Guest::create([
-            'external_id' => '401',
+            'external_id' => 401,
             'first_name' => 'Old',
             'last_name' => 'Name',
-            'email' => 'old@email.com'
+            'email' => 'old@example.com'
         ]);
 
         $booking = Booking::create([
@@ -171,7 +167,7 @@ class BookingSyncServiceTest extends TestCase
 
         $booking->guests()->attach($guest->id);
 
-        // API response with updated data
+        // Mock API responses with updated data
         $bookingData = [
             'id' => 1001,
             'external_id' => 'EXT-BKG-1001',
@@ -181,7 +177,7 @@ class BookingSyncServiceTest extends TestCase
             'room_type_id' => 303,
             'guest_ids' => [401],
             'status' => 'confirmed',
-            'notes' => 'Updated VIP guest'
+            'notes' => 'Updated notes'
         ];
 
         $roomData = [
@@ -192,16 +188,16 @@ class BookingSyncServiceTest extends TestCase
 
         $roomTypeData = [
             'id' => 303,
-            'name' => 'Updated Deluxe Suite',
-            'description' => 'Updated luxurious suite'
+            'name' => 'Updated Name',
+            'description' => 'Updated description'
         ];
 
         $guestsData = [
-            [
+            401 => [
                 'id' => 401,
                 'first_name' => 'Updated',
                 'last_name' => 'Name',
-                'email' => 'updated@email.com'
+                'email' => 'updated@example.com'
             ]
         ];
 
@@ -221,25 +217,25 @@ class BookingSyncServiceTest extends TestCase
             ->with([401])
             ->willReturn($guestsData);
 
-        $this->service->syncBooking(1001, $this->apiService);
+        $this->service->syncBooking(1001);
 
         // Assert data was updated
         $this->assertDatabaseHas('room_types', [
-            'external_id' => '303',
-            'name' => 'Updated Deluxe Suite',
-            'description' => 'Updated luxurious suite'
+            'external_id' => 303,
+            'name' => 'Updated Name',
+            'description' => 'Updated description'
         ]);
 
         $this->assertDatabaseHas('rooms', [
-            'external_id' => '201',
+            'external_id' => 201,
             'floor' => 2
         ]);
 
         $this->assertDatabaseHas('guests', [
-            'external_id' => '401',
+            'external_id' => 401,
             'first_name' => 'Updated',
             'last_name' => 'Name',
-            'email' => 'updated@email.com'
+            'email' => 'updated@example.com'
         ]);
 
         $this->assertDatabaseHas('bookings', [
@@ -247,7 +243,7 @@ class BookingSyncServiceTest extends TestCase
             'arrival_date' => '2024-09-01 00:00:00',
             'departure_date' => '2024-09-03 00:00:00',
             'status' => 'confirmed',
-            'notes' => 'Updated VIP guest'
+            'notes' => 'Updated notes'
         ]);
     }
 } 

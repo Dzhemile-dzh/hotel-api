@@ -13,7 +13,7 @@ class BookingFactory extends Factory
     public function definition()
     {
         $arrivalDate = $this->faker->dateTimeBetween('now', '+2 months');
-        $departureDate = $this->faker->dateTimeBetween($arrivalDate, '+1 month');
+        $departureDate = $this->faker->dateTimeBetween($arrivalDate, $arrivalDate->format('Y-m-d') . ' +1 month');
         
         return [
             'external_id' => 'EXT-BKG-' . $this->faker->unique()->numberBetween(1000, 9999),

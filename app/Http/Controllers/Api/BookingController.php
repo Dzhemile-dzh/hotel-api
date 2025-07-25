@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\BookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
+use App\Repositories\BookingRepository;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
@@ -21,6 +23,13 @@ use Illuminate\Http\Response;
  */
 class BookingController extends Controller
 {
+    private BookingRepository $bookingRepository;
+
+    public function __construct(BookingRepository $bookingRepository)
+    {
+        $this->bookingRepository = $bookingRepository;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/bookings",
@@ -116,22 +125,8 @@ class BookingController extends Controller
     public function store(BookingRequest $request): BookingResource
     {
         $data = $request->validated();
-
-        $booking = Booking::create([
-            'external_id' => $data['external_id'],
-            'room_id' => $data['room_id'],
-            'room_type_id' => $data['room_type_id'],
-            'arrival_date' => $data['arrival_date'],
-            'departure_date' => $data['departure_date'],
-            'status' => $data['status'],
-            'notes' => $data['notes'] ?? null,
-        ]);
-
-        if (isset($data['guest_ids'])) {
-            $booking->guests()->sync($data['guest_ids']);
-        }
-
-        return new BookingResource($booking->load(['room', 'roomType', 'guests']));
+        $booking = $this->bookingRepository->create($data);
+        return new BookingResource($booking);
     }
 
     /**
