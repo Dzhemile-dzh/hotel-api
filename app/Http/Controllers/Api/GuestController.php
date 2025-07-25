@@ -16,7 +16,8 @@ class GuestController extends Controller
     {
         $data = $request->validate([
             'external_id' => 'required|unique:guests,external_id',
-            'name' => 'required|string',
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
             'email' => 'nullable|email',
             'phone' => 'nullable|string',
         ]);
@@ -32,7 +33,8 @@ class GuestController extends Controller
     public function update(Request $request, Guest $guest)
     {
         $data = $request->validate([
-            'name' => 'sometimes|string',
+            'first_name' => 'sometimes|string',
+            'last_name' => 'sometimes|string',
             'email' => 'nullable|email',
             'phone' => 'nullable|string',
         ]);

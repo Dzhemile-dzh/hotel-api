@@ -17,6 +17,7 @@ class RoomTypeController extends Controller
         $data = $request->validate([
             'external_id' => 'required|unique:room_types,external_id',
             'name' => 'required|string',
+            'description' => 'nullable|string',
         ]);
 
         return RoomType::create($data);
@@ -31,6 +32,7 @@ class RoomTypeController extends Controller
     {
         $data = $request->validate([
             'name' => 'sometimes|string',
+            'description' => 'nullable|string',
         ]);
 
         $roomType->update($data);

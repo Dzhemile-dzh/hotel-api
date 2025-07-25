@@ -17,7 +17,8 @@ class RoomController extends Controller
         $data = $request->validate([
             'external_id' => 'required|unique:rooms,external_id',
             'room_type_id' => 'required|exists:room_types,id',
-            'number' => 'nullable|string',
+            'number' => 'required|string',
+            'floor' => 'required|integer',
         ]);
 
         return Room::create($data);
@@ -32,7 +33,8 @@ class RoomController extends Controller
     {
         $data = $request->validate([
             'room_type_id' => 'sometimes|exists:room_types,id',
-            'number' => 'nullable|string',
+            'number' => 'sometimes|string',
+            'floor' => 'sometimes|integer',
         ]);
 
         $room->update($data);
