@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BookingRequest;
+use App\Http\Resources\BookingResource;
 use App\Models\Booking;
-use App\Models\Guest;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 /**
  * @OA\OpenApi(
@@ -55,28 +58,27 @@ class BookingController extends Controller
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(Request $request): AnonymousResourceCollection
     {
         $query = Booking::with(['room', 'roomType', 'guests']);
+
+        // Apply filters using query scopes
         if ($request->has('id')) {
-            $ids = $request->input('id');
-            if (is_array($ids)) {
-                $query->whereIn('id', $ids);
-            } else {
-                $query->where('id', $ids);
-            }
+            $query->filterByIds($request->input('id'));
         }
-        // Filter for 'Single' room bookings made by a specific guest
+
         if ($request->has('single_guest_id')) {
-            $guestId = $request->input('single_guest_id');
-            $query->whereHas('roomType', function ($q) {
-                $q->where('name', 'like', '%Single%');
-            })->whereHas('guests', function ($q) use ($guestId) {
-                $q->where('guests.id', $guestId);
-            });
+            $query->singleRoomForGuest($request->input('single_guest_id'));
         }
+
+        if ($request->has('status')) {
+            $query->byStatus($request->input('status'));
+        }
+
         $perPage = $request->input('per_page', 15);
-        return $query->paginate($perPage);
+        $bookings = $query->paginate($perPage);
+
+        return BookingResource::collection($bookings);
     }
 
     /**
@@ -104,19 +106,9 @@ class BookingController extends Controller
      *     )
      * )
      */
-    public function store(Request $request)
+    public function store(BookingRequest $request): BookingResource
     {
-        $data = $request->validate([
-            'external_id' => 'required|string|unique:bookings,external_id',
-            'room_id' => 'required|exists:rooms,id',
-            'room_type_id' => 'required|exists:room_types,id',
-            'arrival_date' => 'required|date',
-            'departure_date' => 'required|date|after_or_equal:arrival_date',
-            'status' => 'required|string',
-            'notes' => 'nullable|string',
-            'guest_ids' => 'array',
-            'guest_ids.*' => 'exists:guests,id',
-        ]);
+        $data = $request->validated();
 
         $booking = Booking::create([
             'external_id' => $data['external_id'],
@@ -128,9 +120,11 @@ class BookingController extends Controller
             'notes' => $data['notes'] ?? null,
         ]);
 
-        $booking->guests()->sync($data['guest_ids'] ?? []);
+        if (isset($data['guest_ids'])) {
+            $booking->guests()->sync($data['guest_ids']);
+        }
 
-        return response()->json($booking->load(['room', 'roomType', 'guests']), 201);
+        return new BookingResource($booking->load(['room', 'roomType', 'guests']));
     }
 
     /**
@@ -154,9 +148,9 @@ class BookingController extends Controller
      *     )
      * )
      */
-    public function show(Booking $booking)
+    public function show(Booking $booking): BookingResource
     {
-        return $booking->load(['room', 'roomType', 'guests']);
+        return new BookingResource($booking->load(['room', 'roomType', 'guests']));
     }
 
     /**
@@ -192,18 +186,9 @@ class BookingController extends Controller
      *     )
      * )
      */
-    public function update(Request $request, Booking $booking)
+    public function update(BookingRequest $request, Booking $booking): BookingResource
     {
-        $data = $request->validate([
-            'room_id' => 'sometimes|exists:rooms,id',
-            'room_type_id' => 'sometimes|exists:room_types,id',
-            'arrival_date' => 'sometimes|date',
-            'departure_date' => 'sometimes|date|after_or_equal:arrival_date',
-            'status' => 'sometimes|string',
-            'notes' => 'nullable|string',
-            'guest_ids' => 'sometimes|array',
-            'guest_ids.*' => 'exists:guests,id',
-        ]);
+        $data = $request->validated();
 
         $booking->update($data);
 
@@ -211,7 +196,7 @@ class BookingController extends Controller
             $booking->guests()->sync($data['guest_ids']);
         }
 
-        return $booking->load(['room', 'roomType', 'guests']);
+        return new BookingResource($booking->load(['room', 'roomType', 'guests']));
     }
 
     /**
@@ -235,7 +220,7 @@ class BookingController extends Controller
      *     )
      * )
      */
-    public function destroy(Booking $booking)
+    public function destroy(Booking $booking): Response
     {
         $booking->delete();
         return response()->noContent();
