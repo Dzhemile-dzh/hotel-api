@@ -49,6 +49,21 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by booking status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "confirmed",
+                                "pending",
+                                "cancelled",
+                                "completed"
+                            ]
+                        }
                     }
                 ],
                 "responses": {

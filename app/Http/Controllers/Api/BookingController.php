@@ -52,6 +52,13 @@ class BookingController extends Controller
      *         description="Show only bookings for 'Single' rooms made by this guest id",
      *         @OA\Schema(type="integer")
      *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         required=false,
+     *         description="Filter by booking status",
+     *         @OA\Schema(type="string", enum={"confirmed", "pending", "cancelled", "completed"})
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Paginated list of bookings"
