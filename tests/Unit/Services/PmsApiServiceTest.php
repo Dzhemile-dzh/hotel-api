@@ -4,6 +4,7 @@ namespace Tests\Unit\Services;
 
 use App\Services\PmsApiService;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class PmsApiServiceTest extends TestCase
@@ -14,6 +15,9 @@ class PmsApiServiceTest extends TestCase
     {
         parent::setUp();
         $this->service = new PmsApiService();
+        
+        // Clear cache before each test
+        Cache::flush();
     }
 
     public function test_get_booking_ids_returns_array()
@@ -32,7 +36,7 @@ class PmsApiServiceTest extends TestCase
     public function test_get_booking_ids_with_since_parameter()
     {
         Http::fake([
-            'https://api.pms.donatix.info/api/bookings?updated_at.gt=2025-07-20' => Http::response([
+            'https://api.pms.donatix.info/api/bookings*' => Http::response([
                 'data' => [1001, 1003]
             ], 200)
         ]);
@@ -75,6 +79,36 @@ class PmsApiServiceTest extends TestCase
         $result = $this->service->getBookingDetails(1001);
 
         $this->assertEquals($bookingData, $result);
+    }
+
+    public function test_get_booking_details_uses_cache_on_second_call()
+    {
+        $bookingData = [
+            'id' => 1001,
+            'external_id' => 'EXT-BKG-1001',
+            'arrival_date' => '2024-09-01',
+            'departure_date' => '2024-09-03',
+            'room_id' => 201,
+            'room_type_id' => 303,
+            'guest_ids' => [401, 402],
+            'status' => 'confirmed',
+            'notes' => 'VIP guest'
+        ];
+
+        Http::fake([
+            'https://api.pms.donatix.info/api/bookings/1001' => Http::response($bookingData, 200)
+        ]);
+
+        // First call - should make HTTP request
+        $result1 = $this->service->getBookingDetails(1001);
+        $this->assertEquals($bookingData, $result1);
+
+        // Second call - should use cache
+        $result2 = $this->service->getBookingDetails(1001);
+        $this->assertEquals($bookingData, $result2);
+
+        // Verify only one HTTP request was made
+        Http::assertSentCount(1);
     }
 
     public function test_get_room_details_returns_data()
@@ -152,7 +186,10 @@ class PmsApiServiceTest extends TestCase
 
         $result = $this->service->getGuestsDetails([401, 402]);
 
-        $this->assertEquals([$guestData1, $guestData2], $result);
+        $this->assertEquals([
+            401 => $guestData1,
+            402 => $guestData2
+        ], $result);
     }
 
     public function test_get_guests_details_handles_partial_failures()
@@ -171,6 +208,41 @@ class PmsApiServiceTest extends TestCase
 
         $result = $this->service->getGuestsDetails([401, 402]);
 
-        $this->assertEquals([$guestData1], $result);
+        $this->assertEquals([
+            401 => $guestData1
+        ], $result);
+    }
+
+    public function test_get_guests_details_returns_empty_array_for_empty_input()
+    {
+        $result = $this->service->getGuestsDetails([]);
+
+        $this->assertEquals([], $result);
+        
+        // Verify no HTTP requests were made
+        Http::assertNothingSent();
+    }
+
+    public function test_clear_cache_methods()
+    {
+        // First, populate some cache
+        $bookingData = ['id' => 1001, 'external_id' => 'EXT-BKG-1001'];
+        Http::fake([
+            'https://api.pms.donatix.info/api/bookings/1001' => Http::response($bookingData, 200)
+        ]);
+
+        $this->service->getBookingDetails(1001);
+        $this->assertTrue(Cache::has('pms_booking_1001'));
+
+        // Test clear specific cache
+        $this->service->clearCache('booking', 1001);
+        $this->assertFalse(Cache::has('pms_booking_1001'));
+
+        // Test clear all cache
+        $this->service->getBookingDetails(1001);
+        $this->assertTrue(Cache::has('pms_booking_1001'));
+
+        $this->service->clearAllCache();
+        $this->assertFalse(Cache::has('pms_booking_1001'));
     }
 } 
