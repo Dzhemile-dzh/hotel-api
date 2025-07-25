@@ -13,24 +13,49 @@ A Laravel-based hotel management system that syncs bookings with a Property Mana
 - **Idempotent Operations**: Safe to run multiple times without data duplication
 - **Swagger (OpenAPI) Documentation**: Interactive API docs generated from controller annotations
 - **Automated Cron Jobs**: Scheduled synchronization with configurable intervals
-
+- **Advanced Filtering**: Support for filtering by ID, status, and custom queries
+- **Pagination**: Built-in pagination for all API endpoints
+- **Caching**: Intelligent caching for API responses to improve performance
+- **Parallel Processing**: Optimized guest data fetching with parallel requests
 
 ## API Documentation (Swagger / OpenAPI)
 
-This project uses [L5-Swagger](https://github.com/DarkaOnLine/L5-Swagger) to generate OpenAPI documentation from annotations in controller files.
+This project uses [Swagger](https://github.com/DarkaOnLine/L5-Swagger) to generate OpenAPI documentation from annotations in controller files.
 
-http://localhost:8000/api/documentation#/
+**Access the documentation at**: http://localhost:8000/api/documentation
 
 ### Bookings Endpoint Filters
 
 - `?single_guest_id=GUEST_ID` — Show only bookings for 'Single' rooms made by the specified guest.
 - `?id=ID` or `?id[]=ID1&id[]=ID2` — Filter by booking id(s).
+- `?status=confirmed` — Filter by booking status (confirmed, pending, cancelled, completed).
 - `?page=1&per_page=10` — Pagination.
 
 ## API Endpoints
 
-The system integrates with the following PMS API endpoints:
+### Internal API
+- `GET /api/bookings` - List all bookings (with filtering and pagination)
+- `POST /api/bookings` - Create a new booking
+- `GET /api/bookings/{id}` - Get booking details
+- `PUT /api/bookings/{id}` - Update booking
+- `DELETE /api/bookings/{id}` - Delete booking
+- `GET /api/guests` - List all guests
+- `POST /api/guests` - Create a new guest
+- `GET /api/guests/{id}` - Get guest details
+- `PUT /api/guests/{id}` - Update guest
+- `DELETE /api/guests/{id}` - Delete guest
+- `GET /api/rooms` - List all rooms
+- `POST /api/rooms` - Create a new room
+- `GET /api/rooms/{id}` - Get room details
+- `PUT /api/rooms/{id}` - Update room
+- `DELETE /api/rooms/{id}` - Delete room
+- `GET /api/room-types` - List all room types
+- `POST /api/room-types` - Create a new room type
+- `GET /api/room-types/{id}` - Get room type details
+- `PUT /api/room-types/{id}` - Update room type
+- `DELETE /api/room-types/{id}` - Delete room type
 
+### External PMS API (Integration)
 - `GET /api/bookings` - Returns an array of booking IDs
 - `GET /api/bookings/{id}` - Returns booking details including guest_ids array
 - `GET /api/rooms/{id}` - Returns room details
@@ -49,10 +74,41 @@ The system integrates with the following PMS API endpoints:
    cp .env.example .env
    ```
 4. Configure your database in `.env`
-5. Run migrations:
+5. Configure PMS API settings in `.env`:
+   ```env
+   PMS_API_BASE_URL=https://api.pms.donatix.info
+   PMS_API_RATE_LIMIT=2
+   PMS_API_TIMEOUT=30
+   PMS_API_RETRIES=3
+   ```
+6. Run migrations (internal API):
    ```bash
    php artisan migrate
    ```
+7. (Optional - internal API) Seed with sample data:
+   ```bash
+   php artisan db:seed
+   ```
+
+## Configuration
+
+### PMS API Configuration
+
+Create `config/pms.php` or add to your `.env`:
+
+```env
+# PMS API Settings
+PMS_API_BASE_URL=https://api.pms.donatix.info
+PMS_API_RATE_LIMIT=2
+PMS_API_TIMEOUT=30
+PMS_API_RETRIES=3
+
+# Cron Job Settings
+PMS_CRON_ENABLED=true
+PMS_FULL_SYNC_INTERVAL=everyFiveMinutes
+PMS_INCREMENTAL_SYNC_INTERVAL=hourly
+PMS_INCREMENTAL_SINCE="1 hour ago"
+```
 
 ## Usage
 
@@ -90,6 +146,7 @@ Found 1000 bookings to sync.
 Sync completed: 998 processed, 2 errors
 Synchronization completed successfully!
 ```
+
 ## Cron Job Setup
 
 The system includes automated synchronization via cron jobs. Here's how to set it up:
@@ -198,6 +255,44 @@ php artisan sync:bookings --since="2024-01-01"
 - `booking_id` - Foreign key to bookings table
 - `guest_id` - Foreign key to guests table
 
+## Code Structure
+
+### Architecture Patterns
+
+- **Repository Pattern**: Data access logic centralized in repository classes
+- **Service Layer**: Business logic separated into service classes
+- **Form Requests**: Validation logic encapsulated in dedicated request classes
+- **API Resources**: Response transformation handled by resource classes
+- **Query Scopes**: Reusable query logic in model scopes
+
+### Optimizations
+
+- **Caching**: API responses cached for 5 minutes to reduce external calls
+- **Parallel Processing**: Guest data fetched in parallel for better performance
+- **Database Transactions**: Ensures data consistency during sync operations
+- **Rate Limiting**: Built-in rate limiting to respect API constraints
+
+### Performance Features
+
+- **Pagination**: All list endpoints support pagination
+- **Eager Loading**: Relationships loaded efficiently to prevent N+1 queries
+- **Indexing**: Database indexes on frequently queried fields
+- **Connection Pooling**: HTTP client configured for optimal performance
+
+### Testing Strategy
+
+- **Unit Tests**: Individual component testing with mocked dependencies
+- **Feature Tests**: End-to-end testing of complete workflows
+- **Database Tests**: Data integrity and relationship testing
+- **HTTP Faking**: External API calls mocked for reliable testing
+
+### Security
+
+- **CSRF Protection**: Enabled for API endpoints
+- **Input Validation**: Comprehensive validation on all inputs
+- **SQL Injection Prevention**: Eloquent ORM with parameterized queries
+- **Rate Limiting**: Prevents abuse of internal API endpoints
+
 ## API Response Examples
 
 ### Booking Details
@@ -257,6 +352,22 @@ php artisan test
 - **Feature Tests**: Test complete command execution flow
 - **Database Tests**: Test data synchronization and relationships
 
+### Running Specific Tests
+
+```bash
+# Run only unit tests
+php artisan test --testsuite=Unit
+
+# Run only feature tests
+php artisan test --testsuite=Feature
+
+# Run specific test class
+php artisan test --filter=PmsApiServiceTest
+
+# Run specific test method
+php artisan test --filter=test_get_booking_details_returns_data
+```
+
 ## Error Handling
 
 The system includes comprehensive error handling:
@@ -265,6 +376,7 @@ The system includes comprehensive error handling:
 - **Database Errors**: Uses transactions to ensure data consistency
 - **Rate Limiting**: Automatically respects API rate limits
 - **Partial Failures**: Continues processing even if individual records fail
+- **Custom Exceptions**: Detailed error reporting with context information
 
 ## Rate Limiting
 
