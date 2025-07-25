@@ -1,0 +1,176 @@
+<?php
+
+namespace Tests\Unit\Services;
+
+use App\Services\PmsApiService;
+use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
+
+class PmsApiServiceTest extends TestCase
+{
+    private PmsApiService $service;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->service = new PmsApiService();
+    }
+
+    public function test_get_booking_ids_returns_array()
+    {
+        Http::fake([
+            'https://api.pms.donatix.info/api/bookings' => Http::response([
+                'data' => [1001, 1003, 1017]
+            ], 200)
+        ]);
+
+        $result = $this->service->getBookingIds();
+
+        $this->assertEquals([1001, 1003, 1017], $result);
+    }
+
+    public function test_get_booking_ids_with_since_parameter()
+    {
+        Http::fake([
+            'https://api.pms.donatix.info/api/bookings?updated_at.gt=2025-07-20' => Http::response([
+                'data' => [1001, 1003]
+            ], 200)
+        ]);
+
+        $result = $this->service->getBookingIds('2025-07-20');
+
+        $this->assertEquals([1001, 1003], $result);
+    }
+
+    public function test_get_booking_ids_throws_exception_on_error()
+    {
+        Http::fake([
+            'https://api.pms.donatix.info/api/bookings' => Http::response([], 500)
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('HTTP request returned status code 500');
+
+        $this->service->getBookingIds();
+    }
+
+    public function test_get_booking_details_returns_data()
+    {
+        $bookingData = [
+            'id' => 1001,
+            'external_id' => 'EXT-BKG-1001',
+            'arrival_date' => '2024-09-01',
+            'departure_date' => '2024-09-03',
+            'room_id' => 201,
+            'room_type_id' => 303,
+            'guest_ids' => [401, 402],
+            'status' => 'confirmed',
+            'notes' => 'VIP guest'
+        ];
+
+        Http::fake([
+            'https://api.pms.donatix.info/api/bookings/1001' => Http::response($bookingData, 200)
+        ]);
+
+        $result = $this->service->getBookingDetails(1001);
+
+        $this->assertEquals($bookingData, $result);
+    }
+
+    public function test_get_room_details_returns_data()
+    {
+        $roomData = [
+            'id' => 201,
+            'number' => '201',
+            'floor' => 2
+        ];
+
+        Http::fake([
+            'https://api.pms.donatix.info/api/rooms/201' => Http::response($roomData, 200)
+        ]);
+
+        $result = $this->service->getRoomDetails(201);
+
+        $this->assertEquals($roomData, $result);
+    }
+
+    public function test_get_room_type_details_returns_data()
+    {
+        $roomTypeData = [
+            'id' => 301,
+            'name' => 'Standard Single',
+            'description' => 'Cozy room with single bed, perfect for solo travelers'
+        ];
+
+        Http::fake([
+            'https://api.pms.donatix.info/api/room-types/301' => Http::response($roomTypeData, 200)
+        ]);
+
+        $result = $this->service->getRoomTypeDetails(301);
+
+        $this->assertEquals($roomTypeData, $result);
+    }
+
+    public function test_get_guest_details_returns_data()
+    {
+        $guestData = [
+            'id' => 500,
+            'first_name' => 'Benjamin',
+            'last_name' => 'Jackson',
+            'email' => 'benjamin.jackson500@email.com'
+        ];
+
+        Http::fake([
+            'https://api.pms.donatix.info/api/guests/500' => Http::response($guestData, 200)
+        ]);
+
+        $result = $this->service->getGuestDetails(500);
+
+        $this->assertEquals($guestData, $result);
+    }
+
+    public function test_get_guests_details_returns_array()
+    {
+        $guestData1 = [
+            'id' => 401,
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john.doe@email.com'
+        ];
+
+        $guestData2 = [
+            'id' => 402,
+            'first_name' => 'Jane',
+            'last_name' => 'Smith',
+            'email' => 'jane.smith@email.com'
+        ];
+
+        Http::fake([
+            'https://api.pms.donatix.info/api/guests/401' => Http::response($guestData1, 200),
+            'https://api.pms.donatix.info/api/guests/402' => Http::response($guestData2, 200)
+        ]);
+
+        $result = $this->service->getGuestsDetails([401, 402]);
+
+        $this->assertEquals([$guestData1, $guestData2], $result);
+    }
+
+    public function test_get_guests_details_handles_partial_failures()
+    {
+        $guestData1 = [
+            'id' => 401,
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john.doe@email.com'
+        ];
+
+        Http::fake([
+            'https://api.pms.donatix.info/api/guests/401' => Http::response($guestData1, 200),
+            'https://api.pms.donatix.info/api/guests/402' => Http::response([], 404)
+        ]);
+
+        $result = $this->service->getGuestsDetails([401, 402]);
+
+        $this->assertEquals([$guestData1], $result);
+    }
+} 
