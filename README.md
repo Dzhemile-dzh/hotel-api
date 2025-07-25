@@ -12,6 +12,8 @@ A Laravel-based hotel management system that syncs bookings with a Property Mana
 - **Progress Feedback**: Real-time progress indication during sync operations
 - **Idempotent Operations**: Safe to run multiple times without data duplication
 - **Swagger (OpenAPI) Documentation**: Interactive API docs generated from controller annotations
+- **Automated Cron Jobs**: Scheduled synchronization with configurable intervals
+
 
 ## API Documentation (Swagger / OpenAPI)
 
@@ -87,6 +89,72 @@ Found 1000 bookings to sync.
 ████████████████████████████████████████ 1000/1000 [100%]
 Sync completed: 998 processed, 2 errors
 Synchronization completed successfully!
+```
+## Cron Job Setup
+
+The system includes automated synchronization via cron jobs. Here's how to set it up:
+
+### 1. Server Cron Configuration
+
+Add this line to your server's crontab (`crontab -e`):
+
+```bash
+* * * * * cd /path/to/your/project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+### 2. Environment Configuration
+
+Add these variables to your `.env` file:
+
+```env
+# Cron Job Settings
+PMS_CRON_ENABLED=true
+PMS_FULL_SYNC_INTERVAL=everyFiveMinutes
+PMS_INCREMENTAL_SYNC_INTERVAL=hourly
+PMS_INCREMENTAL_SINCE="1 hour ago"
+PMS_SYNC_MAX_EXECUTION_TIME=300
+```
+
+### 3. Available Cron Intervals
+
+- **Full Sync**: Runs every 5 minutes by default (syncs all bookings)
+- **Incremental Sync**: Runs every hour by default (syncs only recent changes)
+
+### 4. Testing Cron Jobs
+
+Test the cron setup:
+
+```bash
+php artisan cron:test
+```
+
+Check scheduled tasks:
+
+```bash
+php artisan schedule:list
+```
+
+### 5. Monitoring
+
+Cron jobs log their activity to Laravel's log files:
+
+```bash
+tail -f storage/logs/laravel.log
+```
+
+## Manual Synchronization
+
+You can still run synchronization manually:
+
+```bash
+# Full sync
+php artisan sync:bookings
+
+# Incremental sync (last hour)
+php artisan sync:bookings --since="1 hour ago"
+
+# Sync since specific date
+php artisan sync:bookings --since="2024-01-01"
 ```
 
 ## Database Schema

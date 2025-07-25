@@ -30,5 +30,13 @@ return [
         'batch_size' => env('PMS_SYNC_BATCH_SIZE', 100),
         'max_concurrent_requests' => env('PMS_MAX_CONCURRENT_REQUESTS', 1),
         'log_level' => env('PMS_LOG_LEVEL', 'info'),
+        'max_execution_time' => env('PMS_SYNC_MAX_EXECUTION_TIME', 300), // 5 minutes
+    ],
+
+    'cron' => [
+        'enabled' => env('PMS_CRON_ENABLED', true),
+        'full_sync_interval' => env('PMS_FULL_SYNC_INTERVAL', 'everyFiveMinutes'), // everyFiveMinutes, hourly, daily
+        'incremental_sync_interval' => env('PMS_INCREMENTAL_SYNC_INTERVAL', 'hourly'), // hourly, daily
+        'incremental_since' => env('PMS_INCREMENTAL_SINCE', '1 hour ago'), // 1 hour ago, 1 day ago
     ],
 ]; 
