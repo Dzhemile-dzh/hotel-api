@@ -1,61 +1,194 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# Hotel Management System API
 
-## About Laravel
+A Laravel-based hotel management system that syncs bookings with a Property Management System (PMS) via REST API.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **PMS Integration**: Syncs bookings, rooms, room types, and guests from external PMS API
+- **Rate Limiting**: Respects API rate limits (2 requests per second)
+- **Incremental Sync**: Support for syncing only updated records since a specific date
+- **Error Handling**: Comprehensive error handling and logging
+- **Progress Feedback**: Real-time progress indication during sync operations
+- **Idempotent Operations**: Safe to run multiple times without data duplication
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## API Endpoints
 
-## Learning Laravel
+The system integrates with the following PMS API endpoints:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- `GET /api/bookings` - Returns an array of booking IDs
+- `GET /api/bookings/{id}` - Returns booking details including guest_ids array
+- `GET /api/rooms/{id}` - Returns room details
+- `GET /api/room-types/{id}` - Returns room type details
+- `GET /api/guests/{id}` - Returns guest details
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Installation
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   composer install
+   ```
+3. Copy environment file:
+   ```bash
+   cp .env.example .env
+   ```
+4. Configure your database in `.env`
+5. Run migrations:
+   ```bash
+   php artisan migrate
+   ```
 
-## Laravel Sponsors
+## Usage
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Sync All Bookings
 
-### Premium Partners
+To sync all bookings from the PMS API:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+php artisan sync:bookings
+```
 
-## Contributing
+### Sync Bookings Since a Specific Date
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+To sync only bookings updated since a specific date:
 
-## Code of Conduct
+```bash
+php artisan sync:bookings --since=2025-07-20
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+You can also use datetime format:
 
-## Security Vulnerabilities
+```bash
+php artisan sync:bookings --since=2025-07-20T14:30:00
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Command Output
 
-## License
+The command provides real-time feedback:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```
+Starting PMS booking synchronization...
+Fetching booking IDs from PMS API...
+Found 1000 bookings to sync.
+████████████████████████████████████████ 1000/1000 [100%]
+Sync completed: 998 processed, 2 errors
+Synchronization completed successfully!
+```
+
+## Database Schema
+
+### Bookings Table
+- `id` - Primary key
+- `external_id` - PMS booking ID (unique)
+- `arrival_date` - Guest arrival date
+- `departure_date` - Guest departure date
+- `room_id` - Foreign key to rooms table
+- `room_type_id` - Foreign key to room_types table
+- `status` - Booking status (confirmed, pending, cancelled, completed)
+- `notes` - Additional booking notes
+- `created_at`, `updated_at` - Timestamps
+
+### Rooms Table
+- `id` - Primary key
+- `external_id` - PMS room ID (unique)
+- `number` - Room number
+- `floor` - Floor number
+- `room_type_id` - Foreign key to room_types table
+- `created_at`, `updated_at` - Timestamps
+
+### Room Types Table
+- `id` - Primary key
+- `external_id` - PMS room type ID (unique)
+- `name` - Room type name
+- `description` - Room type description
+- `created_at`, `updated_at` - Timestamps
+
+### Guests Table
+- `id` - Primary key
+- `external_id` - PMS guest ID (unique)
+- `first_name` - Guest first name
+- `last_name` - Guest last name
+- `email` - Guest email address
+- `phone` - Guest phone number
+- `created_at`, `updated_at` - Timestamps
+
+### Booking Guest Pivot Table
+- `booking_id` - Foreign key to bookings table
+- `guest_id` - Foreign key to guests table
+
+## API Response Examples
+
+### Booking Details
+```json
+{
+  "id": 1001,
+  "external_id": "EXT-BKG-1001",
+  "arrival_date": "2024-09-01",
+  "departure_date": "2024-09-03",
+  "room_id": 201,
+  "room_type_id": 303,
+  "guest_ids": [401, 402],
+  "status": "confirmed",
+  "notes": "VIP guest"
+}
+```
+
+### Room Details
+```json
+{
+  "id": 201,
+  "number": "201",
+  "floor": 2
+}
+```
+
+### Room Type Details
+```json
+{
+  "id": 301,
+  "name": "Standard Single",
+  "description": "Cozy room with single bed, perfect for solo travelers"
+}
+```
+
+### Guest Details
+```json
+{
+  "id": 500,
+  "first_name": "Benjamin",
+  "last_name": "Jackson",
+  "email": "benjamin.jackson500@email.com"
+}
+```
+
+## Testing
+
+Run the test suite:
+
+```bash
+php artisan test
+```
+
+### Test Coverage
+
+- **Unit Tests**: Test individual service methods and API interactions
+- **Feature Tests**: Test complete command execution flow
+- **Database Tests**: Test data synchronization and relationships
+
+## Error Handling
+
+The system includes comprehensive error handling:
+
+- **API Errors**: Logs and reports API failures
+- **Database Errors**: Uses transactions to ensure data consistency
+- **Rate Limiting**: Automatically respects API rate limits
+- **Partial Failures**: Continues processing even if individual records fail
+
+## Rate Limiting
+
+The system automatically implements rate limiting to respect the PMS API's 2 requests per second limit. This is handled internally by the `PmsApiService` class.
+
+## Author
+
+Dzhemile Ahmed
